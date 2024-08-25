@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Exchange Rate Calculator</title>
+    <link rel="stylesheet" href="css.css" />
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <script>
+      class App {
+        constructor() {}
+
+        async render() {
+          const app = document.getElementById("app");
+          app.innerHTML = `
+            <h1>환율계산기</h1>
+            <p>통화와 금액을 선택하세요</p>
+          `;
+          const currencyCon = new CurrencyCon();
+          const rate = new Rate();
+          app.appendChild(currencyCon.render());
+          app.appendChild(rate.render());
+          currencyCon.optionList();
+          currencyCon.initEvent();
+          return app;
+        }
+      }
+      class CurrencyCon {
+        constructor() {}
+
+        async getList() {
+          const res = await fetch(
+            "https://open.exchangerate-api.com/v6/latest"
+          );
+          const rates = await res.json();
+          const list = rates.rates;
+          return list;
+        }
+        calculate() {
+          const currencyEl_one = document.getElementById("currency1");
+          const amountEl_one = document.getElementById("amount1");
+          const currencyEl_two = document.getElementById("currency2");
+          const amountEl_two = document.getElementById("amount2");
+          const rateEl = document.getElementById("rate");
+
+          const currency_one = currencyEl_one.value;
+          const currency_two = currencyEl_two.value;
+          const rate_one = parseFloat(
+            currencyEl_one.options[currencyEl_one.selectedIndex].getAttribute(
+              "data-rate"
+            )
+          );
+
+          const rate_two = parseFloat(
+            currencyEl_two.options[currencyEl_two.selectedIndex].getAttribute(
+              "data-rate"
+            )
+          );
+
+          const rate = rate_two / rate_one;
+          rateEl.innerText = `1 ${currency_one} = ${rate.toFixed(
+            4
+          )} ${currency_two}`;
+
+          amountEl_two.value = (amountEl_one.value * rate).toFixed(2);
+        }
+
+        async optionList() {
+          const list = await this.getList();
+          const currencyEl_one = document.getElementById("currency1");
+          const currencyEl_two = document.getElementById("currency2");
+          for (let key in list) {
+            const option1 = document.createElement("option");
+            const option2 = document.createElement("option");
+            option1.value = key;
+            option1.innerText = key;
+            option1.setAttribute("data-rate", list[key]);
+            option2.value = key;
+            option2.innerText = key;
+            option2.setAttribute("data-rate", list[key]);
+            currencyEl_one.appendChild(option1);
+            currencyEl_two.appendChild(option2);
+
+            if (key === "USD") {
+              option1.selected = true;
+            }
+            if (key === "KRW") {
+              option2.selected = true;
+            }
+          }
+          this.calculate();
+        }
+        async initEvent() {
+          const currencyEl_one = document.getElementById("currency1");
+          const amountEl_one = document.getElementById("amount1");
+          const currencyEl_two = document.getElementById("currency2");
+          const amountEl_two = document.getElementById("amount2");
+          const swap = document.getElementById("swap");
+          currencyEl_one.addEventListener("change", this.calculate);
+          amountEl_one.addEventListener("input", this.calculate);
+          currencyEl_two.addEventListener("change", this.calculate);
+          amountEl_two.addEventListener("input", this.calculate);
+
+          swap.addEventListener("click", () => {
+            const temp = currencyEl_one.value;
+            currencyEl_one.value = currencyEl_two.value;
+            currencyEl_two.value = temp;
+
+            const tempAmount = amountEl_one.value;
+            amountEl_one.value = amountEl_two.value;
+            amountEl_two.value = tempAmount;
+
+            this.calculate();
+          });
+        }
+        render() {
+          const container = document.createElement("div");
+          container.classList.add("container");
+          const currency1 = new Currency(1);
+          const currency2 = new Currency(2);
+          const swap = new Swap();
+
+          container.appendChild(currency1.render());
+          container.appendChild(swap.render());
+          container.appendChild(currency2.render());
+
+          return container;
+        }
+      }
+      class Currency {
+        constructor(number) {
+          this.number = number;
+        }
+        render() {
+          const currency = document.createElement("div");
+          currency.classList.add("currency");
+
+          const select = document.createElement("select");
+          select.id = `currency${this.number}`;
+
+          const input = document.createElement("input");
+          input.type = "number";
+          input.id = `amount${this.number}`;
+          input.placeholder = "0";
+          if (this.number === 1) {
+            input.value = 1; // amount1에 value=1 추가
+          }
+          currency.appendChild(select);
+          currency.appendChild(input);
+          return currency;
+        }
+      }
+      class Swap {
+        constructor() {}
+        render() {
+          const swap = document.createElement("div");
+          swap.classList.add("swap-rate-container");
+          swap.innerHTML = `
+            <button class="btn" id="swap">바꾸기</button>
+            `;
+          return swap;
+        }
+      }
+      class Rate {
+        constructor() {}
+        render() {
+          const rate = document.createElement("div");
+          rate.classList.add("rate");
+          rate.id = "rate";
+          return rate;
+        }
+      }
+      const app = new App();
+      app.render();
+    </script>
+  </body>
+</html>

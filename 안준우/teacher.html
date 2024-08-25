@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Exchange Rate Calculator</title>
+    <link rel="stylesheet" href="./css.css" />
+  </head>
+  <body>
+    <div id="app"></div>
+
+    <script>
+      class CurrencyInput {
+        constructor(id, labelText) {
+          this.id = id;
+          this.labelText = labelText;
+        }
+
+        render() {
+          return `
+                    <div class="currency">
+                        <label for="${this.id}">${this.labelText}</label>
+                        <select id="${this.id}-select"></select>
+                        <input type="number" id="${this.id}-input" placeholder="0" value="1" />
+                    </div>
+                `;
+        }
+      }
+
+      class SwapButton {
+        render() {
+          return `
+                    <div class="swap-rate-container">
+                        <button class="btn" id="swap">바꾸기</button>
+                    </div>
+                `;
+        }
+      }
+
+      class RateDisplay {
+        render() {
+          return '<div class="rate" id="rate"></div>';
+        }
+      }
+
+      class ExchangeRateCalculator {
+        constructor() {
+          this.currencyOneInput = new CurrencyInput("currency-one", "통화 1");
+          this.currencyTwoInput = new CurrencyInput("currency-two", "통화 2");
+          this.swapButton = new SwapButton();
+          this.rateDisplay = new RateDisplay();
+        }
+
+        async fetchRates() {
+          const response = await fetch(
+            "https://open.exchangerate-api.com/v6/latest"
+          );
+          const data = await response.json();
+          const rates = data.rates;
+
+          const selectOne = document.getElementById("currency-one-select");
+          const selectTwo = document.getElementById("currency-two-select");
+
+          Object.keys(rates).forEach((currency) => {
+            selectOne.innerHTML += `<option value="${currency}">${currency}</option>`;
+            selectTwo.innerHTML += `<option value="${currency}">${currency}</option>`;
+          });
+
+          selectOne.value = "USD";
+          selectTwo.value = "KRW";
+        }
+
+        async calculate() {
+          const currencyOne = document.getElementById(
+            "currency-one-select"
+          ).value;
+          const currencyTwo = document.getElementById(
+            "currency-two-select"
+          ).value;
+          const amountOne = document.getElementById("currency-one-input").value;
+
+          const response = await fetch(
+            `https://open.exchangerate-api.com/v6/latest/${currencyOne}`
+          );
+          const data = await response.json();
+          const rate = data.rates[currencyTwo];
+
+          document.getElementById(
+            "rate"
+          ).innerText = `1 ${currencyOne} = ${rate} ${currencyTwo}`;
+          document.getElementById("currency-two-input").value = (
+            amountOne * rate
+          ).toFixed(2);
+        }
+
+        swap() {
+          const tempCurrency = document.getElementById(
+            "currency-one-select"
+          ).value;
+          document.getElementById("currency-one-select").value =
+            document.getElementById("currency-two-select").value;
+          document.getElementById("currency-two-select").value = tempCurrency;
+
+          const tempAmount =
+            document.getElementById("currency-one-input").value;
+          document.getElementById("currency-one-input").value =
+            document.getElementById("currency-two-input").value;
+          document.getElementById("currency-two-input").value = tempAmount;
+
+          this.calculate();
+        }
+
+        setupEventListeners() {
+          document
+            .getElementById("currency-one-select")
+            .addEventListener("change", this.calculate.bind(this));
+          document
+            .getElementById("currency-one-input")
+            .addEventListener("input", this.calculate.bind(this));
+          document
+            .getElementById("currency-two-select")
+            .addEventListener("change", this.calculate.bind(this));
+          document
+            .getElementById("currency-two-input")
+            .addEventListener("input", this.calculate.bind(this));
+          document
+            .getElementById("swap")
+            .addEventListener("click", this.swap.bind(this));
+        }
+
+        render() {
+          const app = document.getElementById("app");
+          app.innerHTML = `
+                    <h1>환율계산기</h1>
+                    <p>통화와 금액을 선택하세요</p>
+                    <div class="container">
+                        ${this.currencyOneInput.render()}
+                        ${this.swapButton.render()}
+                        ${this.currencyTwoInput.render()}
+                    </div>
+                    ${this.rateDisplay.render()}
+                `;
+        }
+
+        async init() {
+          this.render();
+          await this.fetchRates();
+          this.setupEventListeners();
+          this.calculate();
+        }
+      }
+
+      const calculator = new ExchangeRateCalculator();
+      calculator.init();
+    </script>
+  </body>
+</html>

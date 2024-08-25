@@ -1,0 +1,32 @@
+#app {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  border: 2px solid lightpink;
+}
+.container > *,
+.rate {
+  border: 2px solid lightpink;
+  padding: 1rem;
+}
+.container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+}
+.currency {
+  display: flex;
+  flex-direction: column;
+}
+.swap-rate-container {
+  display: flex;
+  align-items: center;
+}
+.btn {
+  padding: 5px 10px;
+}
+.rate {
+  text-align: center;
+}
