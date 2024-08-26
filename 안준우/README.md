@@ -1,6 +1,6 @@
 ![alt text](image.png)
 
-컴포넌트는 총 4개로 정리된다고 봤다.
+컴포넌트는 총 4개로 정리된다고 판단했다.
 
 1. 환율 계산기 전체 컨테이너
 
@@ -171,11 +171,11 @@ return element;
     this.number = number;
     }
     render() {
-    return `            <div class="currency">
-                <select id="currency-${this.number}"></select>
-                <input type="number" id="amount-${this.number}" placeholder="0" value="1" />
-            </div>
-           `;
+    return `           <div class="currency">
+            <select id="currency-${this.number}"></select>
+            <input type="number" id="amount-${this.number}" placeholder="0" value="1" />
+        </div>
+      `;
     }
     }
 
@@ -184,10 +184,9 @@ return element;
     class Swap {
     constructor() {}
     render() {
-    return `        <div class="swap-rate-container">
-            <button class="btn" id="swap">바꾸기</button>
-        </div>
-    `;
+    return `       <div class="swap-rate-container">
+        <button class="btn" id="swap">바꾸기</button>
+    </div>`;
     }
     }
 
@@ -197,6 +196,6 @@ return element;
     constructor() {}
     render() {
     return `<div class="rate" id="rate"></div>
-     `;
+ `;
     }
     }
