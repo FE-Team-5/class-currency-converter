@@ -1,60 +1,52 @@
-![alt text](image.png)
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Exchange Rate Calculator</title>
+    <link rel="stylesheet" href="css.css" />
+  </head>
+  <body>
+    <div id="app"></div>
 
-컴포넌트는 총 4개로 정리된다고 판단.
+    <script>
+      async function init() {
+        const calculator = new Calculator();
+        calculator.render();
+        calculator.cacheDOMElements(); // 생성된 후 DOM 요소 캐싱
 
-1. 환율 계산기 전체 컨테이너
+        await calculator.optionList();
 
-2. Select box 밑 input 창
+        const currencyEl_one = document.getElementById("currency-one");
+        const currencyEl_two = document.getElementById("currency-two");
+        const amountEl_one = document.getElementById("amount-one");
+        const amountEl_two = document.getElementById("amount-two");
+        const swap = document.getElementById("swap");
+        currencyEl_one.addEventListener("change", calculator.calculate);
+        amountEl_one.addEventListener("input", calculator.calculate);
+        currencyEl_two.addEventListener("change", calculator.calculate);
+        amountEl_two.addEventListener("input", calculator.calculate);
+        swap.addEventListener("click", () => {
+          const temp = currencyEl_one.value;
+          currencyEl_one.value = currencyEl_two.value;
+          currencyEl_two.value = temp;
 
-3. 바꾸기 버튼
+          const tempAmount = amountEl_one.value;
+          amountEl_one.value = amountEl_two.value;
+          amountEl_two.value = tempAmount;
 
-4. 2번에서 input 값 변경 및 select 값 변경시에 단위별 환율 보여주는 창
-
-컴포넌트는 (1) 외관 (2) 기능으로 나눌 수 있다.
-컴포넌트 분리해서 함수형 프로그래밍을 하는 이유는 반복 및 유지 보수에 강점이 있기 때문이다.
-
-2번에서 일어나는 이벤트가 4번에 전달되야 하고,
-3번에서 일어나는 이번트가 2번과 4번에 전달되야 한다.
-이런 것들에 대해서 핸들링하려면 2,3,4의 부모인 1번이 이것을 핸들링해야 한다.
-
-# 주의점
-
-          app.innerHTML = `
-            <h1>환율계산기</h1>
-            <p>통화와 금액을 선택하세요</p>
-            <div class="container">
-                ${this.currencyOne.render()}
-                ${this.swap.render()}
-                ${this.currencyTwo.render()}
-            </div>
-            ${this.rate.render()}
-            `;
-
-위 처럼 사용하고 싶은 경우
-this.swap.render() 는 아래와 같이 작성되야 한다.
-render() {
-return `<div class="rate" id="rate"></div>
-         `;
-
-아래와 같이 작성하면 dom 객체가 리턴되기 때문에 객체를 toString() 한 [object HTMLDivElement] 문자열이 출력됨.
-const element = document.createElement("div");
-element.classList.add("rate");
-element.id = "rate";
-return element;
-
-# 컴포넌트 별 코드
-
-1.  환율 계산기 전체 컨테이너
-
-    class Calculator {
-    constructor() {
-    this.currencyOne = new Currency("one");
-    this.currencyTwo = new Currency("two");
-    this.swap = new Swap();
-    this.rate = new Rate();
-    }
-
-        // DOM 요소 캐싱 메서드 Render 이후에 호출해야 한다.
+          calculator.calculate();
+        });
+      }
+      class Calculator {
+        constructor() {
+          this.currencyOne = new Currency("one");
+          this.currencyTwo = new Currency("two");
+          this.swap = new Swap();
+          this.rate = new Rate();
+        }
+        // DOM 요소 캐싱 메서드
         cacheDOMElements() {
           this.currencyEl_one = document.getElementById("currency-one");
           this.currencyEl_two = document.getElementById("currency-two");
@@ -64,7 +56,6 @@ return element;
           this.rateEl = document.getElementById("rate");
         }
 
-        //환율 리스트 가져오는 메소드
         async getList() {
           const res = await fetch(
             "https://open.exchangerate-api.com/v6/latest"
@@ -73,7 +64,6 @@ return element;
           return rates;
         }
 
-        //환율 리스트 가져와서 세팅 후 계산 해주는 함수
         async optionList() {
           const list = await this.getList();
           this.populateOptions(this.currencyEl_one, list, "USD");
@@ -81,7 +71,6 @@ return element;
           this.calculate();
         }
 
-        //select Element에 option 리스트 추가해주는 메소드
         populateOptions(selectEl, list, defaultCurrency) {
           for (const key in list) {
             const option = document.createElement("option");
@@ -96,11 +85,6 @@ return element;
             selectEl.appendChild(option);
           }
         }
-
-        /*
-        2번에서 일어나는 이벤트가 4번에 전달,
-        3번에서 일어나는 이번트가 2번과 4번에 전달하는 메소드
-        */
         calculate = () => {
           const currency_one = this.currencyEl_one.value;
           const currency_two = this.currencyEl_two.value;
@@ -125,7 +109,6 @@ return element;
           this.amountEl_two.value = (this.amountEl_one.value * rate).toFixed(2);
         };
 
-        //이벤트 리스너 추가
         addEventListeners() {
           this.currencyEl_one.addEventListener("change", this.calculate);
           this.amountEl_one.addEventListener("input", this.calculate);
@@ -137,8 +120,6 @@ return element;
             this.calculate();
           });
         }
-
-        //값 바꾸는 함수.
         swapValues() {
           const tempCurrency = this.currencyEl_one.value;
           this.currencyEl_one.value = this.currencyEl_two.value;
@@ -161,41 +142,38 @@ return element;
             ${this.rate.render()}
             `;
         }
-
-    }
-
-2.  Select box 밑 input 창
-
-    class Currency {
-    constructor(number) {
-    this.number = number;
-    }
-    render() {
-    return `          <div class="currency">
-        <select id="currency-${this.number}"></select>
-        <input type="number" id="amount-${this.number}" placeholder="0" value="1" />
-    </div>
- `;
-    }
-    }
-
-3.  바꾸기 버튼
-
-    class Swap {
-    constructor() {}
-    render() {
-    return ` <div class="swap-rate-container">
-    <button class="btn" id="swap">바꾸기</button>
-    </div>`;
-    }
-    }
-
-4.  2번에서 input 값 변경 및 select 값 변경시에 단위별 환율 보여주는 창
-
-    class Rate {
-    constructor() {}
-    render() {
-    return `<div class="rate" id="rate"></div>
-`;
-    }
-    }
+      }
+      class Currency {
+        constructor(number) {
+          this.number = number;
+        }
+        render() {
+          return `
+                <div class="currency">
+                    <select id="currency-${this.number}"></select>
+                    <input type="number" id="amount-${this.number}" placeholder="0" value="1" />
+                </div>
+                `;
+        }
+      }
+      class Swap {
+        constructor() {}
+        render() {
+          return `
+            <div class="swap-rate-container">
+                <button class="btn" id="swap">바꾸기</button>
+            </div>
+         `;
+        }
+      }
+      class Rate {
+        constructor() {}
+        render() {
+          return ` <div class="rate" id="rate"></div>
+          `;
+        }
+      }
+      init();
+    </script>
+  </body>
+</html>
